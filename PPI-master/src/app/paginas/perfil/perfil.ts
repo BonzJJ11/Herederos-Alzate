@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, User, Mail, Phone, MapPin, Building, Calendar, Edit2, Save, X } from 'lucide-angular';
 import { AuthService } from '../../nucleo/servicios/auth.service';
+import Swal from 'sweetalert2';
 
 interface UserProfile {
   nombreCompleto: string;
@@ -100,10 +101,31 @@ export class Perfil implements OnInit {
     const user = this.auth.getUsuario();
     if (!user) return;
 
+    if (!this.editForm.nombreCompleto?.trim() || !this.editForm.apellidoCompleto?.trim() || !this.editForm.correoPersonal?.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'El nombre, apellido y correo son obligatorios.',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    if (!emailRegex.test(this.editForm.correoPersonal)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Correo inválido',
+        text: 'Por favor, ingresa un correo electrónico válido.',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
     const payload = {
-      nombre: this.editForm.nombreCompleto,
-      apellidos: this.editForm.apellidoCompleto,
-      mail: this.editForm.correoPersonal
+      nombre: this.editForm.nombreCompleto.trim(),
+      apellidos: this.editForm.apellidoCompleto.trim(),
+      mail: this.editForm.correoPersonal.trim()
     };
 
     this.auth.editarEmpleado(user.id_usuario, payload).subscribe({
@@ -111,11 +133,21 @@ export class Perfil implements OnInit {
         this.mapearDatosPerfil(updatedData);
         this.auth.actualizarCacheUsuario(updatedData);
         this.isEditing = false;
-        alert('Perfil actualizado correctamente.');
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Perfil actualizado correctamente.',
+          confirmButtonColor: '#3b82f6'
+        });
       },
       error: (err) => {
         console.error('Error al actualizar perfil:', err);
-        alert('Hubo un error al guardar los cambios.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Hubo un error al guardar los cambios.',
+          confirmButtonColor: '#3b82f6'
+        });
       }
     });
   }

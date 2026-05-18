@@ -20,17 +20,17 @@
 
       <label class="field">
         <span>Código</span>
-        <input type="text" placeholder="Ej: CAL006" [(ngModel)]="form.codigo" />
+        <input type="text" placeholder="Ej: CAL006" [(ngModel)]="form.codigo" (input)="verificarCodigo()" />
       </label>
 
-      <label class="field">
-        <span>Modelo</span>
-        <input type="text" placeholder="Nombre del modelo" [(ngModel)]="form.modelo" />
+      <label class="field" [style.opacity]="modeloEncontrado ? '0.6' : '1'">
+        <span>Modelo <small *ngIf="modeloEncontrado" style="color: #0071bc;">(Auto-completado)</small></span>
+        <input type="text" placeholder="Nombre del modelo" [(ngModel)]="form.modelo" [disabled]="modeloEncontrado" [readonly]="modeloEncontrado" />
       </label>
 
-      <label class="field">
-        <span>Categoría</span>
-        <select [(ngModel)]="form.id_categoria" (click)="$event.stopPropagation()">
+      <label class="field" [style.opacity]="modeloEncontrado ? '0.6' : '1'">
+        <span>Categoría <small *ngIf="modeloEncontrado" style="color: #0071bc;">(Auto-completado)</small></span>
+        <select [(ngModel)]="form.id_categoria" [disabled]="modeloEncontrado" (click)="$event.stopPropagation()">
           <option *ngFor="let cat of categorias" [ngValue]="cat.id_categoria">
             {{ cat.nombre_categoria }}
           </option>

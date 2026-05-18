@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Usuario, Rol, Movimiento, TipoMovimiento, Calzado, Categoria, Proveedor
+from .models import Usuario, Rol, Movimiento, TipoMovimiento, ModeloCalzado, VarianteCalzado, Categoria, Proveedor
 
 # Register your models here.
 # ============================================================
@@ -49,16 +49,26 @@ class ProveedorAdmin(admin.ModelAdmin):
 
 
 # ============================================================
-# CALZADO
+# MODELO CALZADO
 # ============================================================
-@admin.register(Calzado)
-class CalzadoAdmin(admin.ModelAdmin):
-    list_display   = ('id_calzado', 'codigo', 'modelo', 'talla', 'color',
-                      'stock_actual', 'id_categoria',
-                      'id_proveedor', 'fecha_calzado', 'activo')
-    search_fields  = ('codigo', 'modelo', 'color')
-    list_filter    = ('activo', 'id_categoria', 'id_proveedor', 'talla')
-    ordering       = ('modelo',)
+@admin.register(ModeloCalzado)
+class ModeloCalzadoAdmin(admin.ModelAdmin):
+    list_display   = ('id_modelo', 'codigo', 'nombre_modelo', 'id_categoria',
+                      'fecha_registro', 'activo')
+    search_fields  = ('codigo', 'nombre_modelo')
+    list_filter    = ('activo', 'id_categoria')
+    ordering       = ('nombre_modelo',)
+
+# ============================================================
+# VARIANTE CALZADO
+# ============================================================
+@admin.register(VarianteCalzado)
+class VarianteCalzadoAdmin(admin.ModelAdmin):
+    list_display   = ('id_variante', 'id_modelo', 'talla', 'color',
+                      'stock_actual', 'id_proveedor', 'activo')
+    search_fields  = ('id_modelo__codigo', 'id_modelo__nombre_modelo', 'color')
+    list_filter    = ('activo', 'talla', 'color', 'id_proveedor')
+    ordering       = ('id_modelo__nombre_modelo',)
 
     def stock_bajo(self, obj):
         return obj.stock_actual == 0
@@ -81,8 +91,8 @@ class TipoMovimientoAdmin(admin.ModelAdmin):
 # ============================================================
 @admin.register(Movimiento)
 class MovimientoAdmin(admin.ModelAdmin):
-    list_display   = ('id_movimiento', 'id_calzado', 'id_tipomovimiento',
+    list_display   = ('id_movimiento', 'id_variante', 'id_tipomovimiento',
                       'cantidad', 'id_usuario', 'fecha_movimiento', 'descripcion')
-    search_fields  = ('id_calzado__codigo', 'id_calzado__modelo', 'id_usuario__usuario')
+    search_fields  = ('id_variante__id_modelo__codigo', 'id_variante__id_modelo__nombre_modelo', 'id_usuario__usuario')
     list_filter    = ('id_tipomovimiento', 'fecha_movimiento')
     ordering       = ('-fecha_movimiento',)

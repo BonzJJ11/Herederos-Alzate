@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Search, FileText, Printer, ArrowLeft, Download, FileDown, FileSpreadsheet, Eraser } from 'lucide-angular';
 import { CalzadoService } from '../../nucleo/servicios/calzado.service';
 import { AuthService } from '../../nucleo/servicios/auth.service';
+import Swal from 'sweetalert2';
 
 interface Movimiento {
   id: number;
@@ -58,6 +59,7 @@ export class Facturacion implements OnInit {
   escribiendoNueva: boolean = false;
   usarFirmaGuardada: boolean = false;
   puedeFirmar: boolean = false;
+  haDibujado: boolean = false;
 
   constructor(
     private calzadoService: CalzadoService,
@@ -71,7 +73,7 @@ export class Facturacion implements OnInit {
   }
 
   cargarMisFirmas() {
-    const userId = Number(localStorage.getItem('userId'));
+    const userId = Number(sessionStorage.getItem('userId'));
     if (!userId) return;
     this.calzadoService.obtenerMisFirmas(userId).subscribe({
       next: (data) => {
@@ -119,9 +121,10 @@ export class Facturacion implements OnInit {
     this.usarFirmaGuardada = false;
     this.dibujandoNueva = false;
     this.escribiendoNueva = false;
+    this.haDibujado = false;
 
     const isAdmin = this.authService.isAdmin();
-    const userId = Number(localStorage.getItem('userId'));
+    const userId = Number(sessionStorage.getItem('userId'));
     
     // Si es administrador o si la factura fue creada por el usuario actual
     this.puedeFirmar = isAdmin || (Number(mov.id_usuario) === userId);
@@ -162,6 +165,7 @@ export class Facturacion implements OnInit {
     this.usarFirmaGuardada = false;
     this.dibujandoNueva = false;
     this.escribiendoNueva = false;
+    this.haDibujado = false;
   }
 
   setModoFirma(modo: 'manual' | 'escrita') {
@@ -179,6 +183,7 @@ export class Facturacion implements OnInit {
   dibujarNueva() {
     this.dibujandoNueva = true;
     this.usarFirmaGuardada = false;
+    this.haDibujado = false;
     setTimeout(() => this.initCanvas(), 50);
   }
 
@@ -192,6 +197,7 @@ export class Facturacion implements OnInit {
     this.usarFirmaGuardada = false;
     this.dibujandoNueva = false;
     this.escribiendoNueva = false;
+    this.haDibujado = false;
     setTimeout(() => this.prepararVistaFirma(), 100);
   }
 
@@ -254,6 +260,7 @@ export class Facturacion implements OnInit {
 
     this.lastX = x;
     this.lastY = y;
+    this.haDibujado = true;
   }
 
   private stopDrawing() {
@@ -264,12 +271,13 @@ export class Facturacion implements OnInit {
     if (!this.ctx) return;
     const canvas = this.canvasRef.nativeElement;
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+    this.haDibujado = false;
   }
 
   guardarFirmaBackend() {
     if (!this.facturaSeleccionada) return;
 
-    const userId = Number(localStorage.getItem('userId'));
+    const userId = Number(sessionStorage.getItem('userId'));
     let payload: any = { id_usuario: userId };
 
     if (this.usarFirmaGuardada) {
@@ -284,18 +292,36 @@ export class Facturacion implements OnInit {
           nombre_firma: this.miFirmaEscrita.nombre_firma
         };
       } else {
-        alert('No se pudo usar la firma guardada.');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Firma no encontrada',
+          text: 'No se pudo usar la firma guardada.',
+          confirmButtonColor: '#3b82f6'
+        });
         return;
       }
     } else {
       payload.tipo_firma = this.modoFirma;
       if (this.modoFirma === 'manual') {
-        if (!this.canvasRef) return;
+        if (!this.canvasRef || !this.haDibujado) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Firma vacía',
+            text: 'Por favor, dibuja tu firma antes de guardar.',
+            confirmButtonColor: '#3b82f6'
+          });
+          return;
+        }
         const canvas = this.canvasRef.nativeElement;
         payload.firma_base64 = canvas.toDataURL('image/png');
       } else {
         if (!this.nombreFirma.trim()) {
-          alert('Debe ingresar su nombre para la firma escrita.');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Nombre requerido',
+            text: 'Debe ingresar su nombre para la firma escrita.',
+            confirmButtonColor: '#3b82f6'
+          });
           return;
         }
         payload.nombre_firma = this.nombreFirma.trim();
@@ -319,12 +345,22 @@ export class Facturacion implements OnInit {
         // Recargar historial de firmas
         this.cargarMisFirmas();
         this.cdr.detectChanges();
-        alert('Firma guardada correctamente.');
+        Swal.fire({
+          icon: 'success',
+          title: 'Firma guardada',
+          text: 'Firma guardada correctamente.',
+          confirmButtonColor: '#3b82f6'
+        });
       },
       error: (err) => {
         this.guardandoFirma = false;
         console.error('Error al guardar firma', err);
-        alert('Ocurrió un error al guardar la firma.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Ocurrió un error al guardar la firma.',
+          confirmButtonColor: '#3b82f6'
+        });
       }
     });
   }

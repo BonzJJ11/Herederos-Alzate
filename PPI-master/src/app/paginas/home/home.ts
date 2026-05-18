@@ -78,12 +78,30 @@ export class HomeComponent implements OnInit {
 
   cargarDatos() {
     forkJoin({
-      calzados: this.calzadoService.getCalzados(),
+      calzados: this.calzadoService.getModelosCalzado(),
       movimientos: this.calzadoService.getMovimientos()
     }).subscribe({
       next: ({ calzados, movimientos }) => {
-        this.allCalzados = calzados;
-        this.procesarEstadisticas(calzados);
+        const variantes: any[] = [];
+        calzados.forEach((m: any) => {
+          if (m.variantes) {
+            m.variantes.forEach((v: any) => {
+              if (v.activo) {
+                variantes.push({
+                  codigo: m.codigo,
+                  modelo: m.nombre_modelo,
+                  talla: v.talla,
+                  color: v.color,
+                  stock_actual: v.stock_actual,
+                  nombre_proveedor: m.nombre_proveedor
+                });
+              }
+            });
+          }
+        });
+
+        this.allCalzados = variantes;
+        this.procesarEstadisticas(variantes);
         this.procesarMovimientos(movimientos);
         this.actualizarVistaDetalle();
         this.cdr.detectChanges();
@@ -108,9 +126,9 @@ export class HomeComponent implements OnInit {
       talla: c.talla,
       color: c.color,
       stock: c.stock_actual,
-      minimo: 10,
+      minimo: 50,
       proveedor: c.nombre_proveedor,
-      estado: c.stock_actual <= 0 ? 'Sin Stock' : (c.stock_actual < 10 ? 'Stock Bajo' : 'En Stock') as StockStatus
+      estado: c.stock_actual <= 0 ? 'Sin Stock' : (c.stock_actual <= 50 ? 'Stock Bajo' : 'En Stock') as StockStatus
     }));
   }
 
@@ -119,7 +137,7 @@ export class HomeComponent implements OnInit {
       case 'En Stock':
         return this.allCalzados.filter(c => c.stock_actual > 0);
       case 'Stock Bajo':
-        return this.allCalzados.filter(c => c.stock_actual > 0 && c.stock_actual < 10);
+        return this.allCalzados.filter(c => c.stock_actual > 0 && c.stock_actual <= 50);
       case 'Sin Stock':
         return this.allCalzados.filter(c => (c.stock_actual || 0) <= 0);
       default:
@@ -130,7 +148,7 @@ export class HomeComponent implements OnInit {
   private procesarEstadisticas(calzados: any[]) {
     const totalModelos = calzados.length;
     const stockTotal = calzados.reduce((acc, c) => acc + (c.stock_actual || 0), 0);
-    const bajoStockCount = calzados.filter(c => c.stock_actual > 0 && c.stock_actual < 10).length;
+    const bajoStockCount = calzados.filter(c => c.stock_actual > 0 && c.stock_actual <= 50).length;
     const sinStockCount = calzados.filter(c => (c.stock_actual || 0) <= 0).length;
 
     this.stats = [
@@ -155,15 +173,15 @@ export class HomeComponent implements OnInit {
   }
 
   private procesarBajoStock(calzados: any[]) {
-    // Productos con stock < 10
-    const criticos = calzados.filter(c => (c.stock_actual || 0) < 10).slice(0, 8); // Limitamos a 8 para no saturar
+    // Productos con stock <= 50
+    const criticos = calzados.filter(c => (c.stock_actual || 0) > 0 && (c.stock_actual || 0) <= 50).slice(0, 8); // Limitamos a 8 para no saturar
     this.lowStockItems = criticos.map(c => ({
       codigo: c.codigo,
       modelo: c.modelo,
       talla: c.talla,
       color: c.color,
       stock: c.stock_actual,
-      minimo: 10, // Hardcoded as agreed
+      minimo: 50, // Hardcoded as agreed
       proveedor: c.nombre_proveedor,
       estado: c.stock_actual <= 0 ? 'Sin Stock' : 'Stock Bajo'
     }));

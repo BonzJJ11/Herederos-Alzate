@@ -5,6 +5,7 @@ import { LucideAngularModule, Plus, Pencil, Trash2, Search } from 'lucide-angula
 import { NuevaCategoria } from '../../../nueva-categoria/nueva-categoria';
 import { AuthService } from '../../../../nucleo/servicios/auth.service';
 import { CalzadoService } from '../../../../nucleo/servicios/calzado.service';
+import Swal from 'sweetalert2';
 
 type CategoryStatus = 'Activa' | 'Inactiva';
 
@@ -100,25 +101,101 @@ export class Categorias implements OnInit {
   saveEdit(): void {
     if (!this.editCategoryId) return;
 
+    const nombre = this.editForm.nombre.trim();
+    const descripcion = this.editForm.descripcion.trim();
+
+    if (!nombre || !descripcion) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor completa nombre y descripcion antes de guardar.',
+        confirmButtonColor: '#0056b3'
+      });
+      return;
+    }
+
+    const originalCategory = this.categories.find(c => c.id === this.editCategoryId);
+    if (
+      originalCategory &&
+      originalCategory.nombre.trim() === nombre &&
+      originalCategory.descripcion.trim() === descripcion
+    ) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin cambios',
+        text: 'Debes editar al menos un campo antes de guardar.',
+        confirmButtonColor: '#0056b3'
+      });
+      return;
+    }
+
     const payload = {
-      nombre_categoria: this.editForm.nombre,
-      descripcion:      this.editForm.descripcion,
+      nombre_categoria: nombre,
+      descripcion:      descripcion,
     };
 
     this.calzadoService.updateCategoria(this.editCategoryId, payload).subscribe({
-      next: () => { this.cargarCategorias(); this.cancelEdit(); },
-      error: (err) => console.error('Error actualizando categoria:', err)
+      next: () => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Categoria actualizada',
+          text: 'Los cambios se guardaron correctamente.',
+          confirmButtonColor: '#0056b3',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        this.cargarCategorias();
+        this.cancelEdit();
+      },
+      error: (err) => {
+        console.error('Error actualizando categoria:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'No se pudo guardar',
+          text: 'Hubo un problema al actualizar la categoria.',
+          confirmButtonColor: '#0056b3'
+        });
+      }
     });
   }
 
   cancelEdit(): void { this.editCategoryId = null; }
 
   deleteCategory(category: CategoryItem): void {
-    if (!confirm(`¿Eliminar categoría "${category.nombre}"?`)) return;
+    Swal.fire({
+      icon: 'warning',
+      title: 'Eliminar categoria',
+      text: `Estas seguro de eliminar la categoria "${category.nombre}"?`,
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#0056b3',
+      confirmButtonText: 'Si, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
 
-    this.calzadoService.deleteCategoria(category.id).subscribe({
-      next: () => this.cargarCategorias(),
-      error: (err) => console.error('Error eliminando categoria:', err)
+      this.calzadoService.deleteCategoria(category.id).subscribe({
+        next: () => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Categoria eliminada',
+            text: 'La categoria se elimino correctamente.',
+            confirmButtonColor: '#0056b3',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          this.cargarCategorias();
+        },
+        error: (err) => {
+          console.error('Error eliminando categoria:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'No se pudo eliminar',
+            text: 'Hubo un problema al eliminar la categoria.',
+            confirmButtonColor: '#0056b3'
+          });
+        }
+      });
     });
   }
 }

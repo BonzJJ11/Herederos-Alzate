@@ -5,6 +5,7 @@ import { RegistrarEmpleado } from '../registrar-empleado/registrar-empleado';
 import { AuthService } from '../../../../nucleo/servicios/auth.service';
 
 import { LucideAngularModule, Search, Trash2, Pencil, History, UserPlus, X } from 'lucide-angular';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-editar-empleado',
@@ -152,7 +153,12 @@ export class EditarEmpleado implements OnInit, OnDestroy {
         error: (err) => {
           hasError = true;
           console.error(`Error al eliminar empleado ${id}:`, err);
-          alert('Error al eliminar uno o más empleados.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al eliminar uno o más empleados.',
+            confirmButtonColor: '#3b82f6'
+          });
         }
       });
     });
@@ -174,6 +180,40 @@ export class EditarEmpleado implements OnInit, OnDestroy {
 
   saveEditMenu() {
     if (!this.editEmployeeId) return;
+
+    if (!this.editForm.nombreCompleto?.trim() || !this.editForm.apellidoCompleto?.trim() || !this.editForm.usuario?.trim() || !this.editForm.correoPersonal?.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'El nombre, apellido, usuario y correo son obligatorios.',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    if (!emailRegex.test(this.editForm.correoPersonal)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Correo inválido',
+        text: 'Por favor, ingresa un correo electrónico válido.',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    if (this.editForm.nuevaContrasena.trim()) {
+      if (this.editForm.nuevaContrasena.trim() !== this.editForm.confirmarContrasena.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Contraseñas no coinciden',
+          text: 'La nueva contraseña y su confirmación deben ser iguales.',
+          confirmButtonColor: '#3b82f6'
+        });
+        return;
+      }
+    }
+
     const payload: any = {
       nombre:        this.editForm.nombreCompleto.trim(),
       apellidos:     this.editForm.apellidoCompleto.trim(),
@@ -206,8 +246,13 @@ export class EditarEmpleado implements OnInit, OnDestroy {
         this.cdr.detectChanges(); // ✅ AGREGADO
       },
       error: (err) => {
-        const msgs = Object.values(err.error ?? {}).flat().join('\n');
-        alert('Error al guardar:\n' + msgs);
+        const msgs = Object.values(err.error ?? {}).flat().join('\\n');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al guardar',
+          text: msgs || 'Ocurrió un error inesperado.',
+          confirmButtonColor: '#3b82f6'
+        });
       }
     });
   }

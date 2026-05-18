@@ -5,7 +5,8 @@ from .views import (
     ListaUsuariosView,
     EditarUsuarioView,  # ✅ NUEVO
     ForgotPasswordView, VerifyCodeView, ResetPasswordView,
-    CalzadoListView, CalzadoDetailView,
+    ModeloCalzadoListView, ModeloCalzadoDetailView,
+    VarianteCalzadoListView, VarianteCalzadoDetailView,
     CategoriaListView, CategoriaDetailView,
     ProveedorListView, ProveedorDetailView,
     MovimientoListView, MovimientoEntradaView, MovimientoSalidaView,
@@ -27,9 +28,11 @@ urlpatterns = [
     path('api/auth/verify-code/',           VerifyCodeView.as_view(),      name='verify_code'),
     path('api/auth/reset-password/',        ResetPasswordView.as_view(),   name='reset_password'),
 
-    # CALZADO
-    path('api/calzado/',              CalzadoListView.as_view(),   name='calzado_list'),
-    path('api/calzado/<int:pk>/',     CalzadoDetailView.as_view(), name='calzado_detail'),
+    # CALZADO (MODELOS Y VARIANTES)
+    path('api/modelos-calzado/',              ModeloCalzadoListView.as_view(),   name='modelo_calzado_list'),
+    path('api/modelos-calzado/<int:pk>/',     ModeloCalzadoDetailView.as_view(), name='modelo_calzado_detail'),
+    path('api/variantes-calzado/',            VarianteCalzadoListView.as_view(),   name='variante_calzado_list'),
+    path('api/variantes-calzado/<int:pk>/',   VarianteCalzadoDetailView.as_view(), name='variante_calzado_detail'),
 
     # CATEGORIAS
     path('api/categorias/',           CategoriaListView.as_view(),   name='categoria_list'),

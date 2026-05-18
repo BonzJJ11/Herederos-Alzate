@@ -16,21 +16,38 @@ export class CalzadoService {
     });
   }
 
-  // CALZADO
-  getCalzados(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/api/calzado/`, { headers: this.getHeaders() });
+  // MODELOS CALZADO
+  getModelosCalzado(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/api/modelos-calzado/`, { headers: this.getHeaders() });
   }
 
-  crearCalzado(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/calzado/`, data, { headers: this.getHeaders() });
+  crearModeloCalzado(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/modelos-calzado/`, data, { headers: this.getHeaders() });
   }
 
-  updateCalzado(id: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/api/calzado/${id}/`, data, { headers: this.getHeaders() });
+  updateModeloCalzado(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/api/modelos-calzado/${id}/`, data, { headers: this.getHeaders() });
   }
 
-  deleteCalzado(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/api/calzado/${id}/`, { headers: this.getHeaders() });
+  deleteModeloCalzado(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/api/modelos-calzado/${id}/`, { headers: this.getHeaders() });
+  }
+
+  // VARIANTES CALZADO
+  getVariantesCalzado(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/api/variantes-calzado/`, { headers: this.getHeaders() });
+  }
+
+  crearVarianteCalzado(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/variantes-calzado/`, data, { headers: this.getHeaders() });
+  }
+
+  updateVarianteCalzado(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/api/variantes-calzado/${id}/`, data, { headers: this.getHeaders() });
+  }
+
+  deleteVarianteCalzado(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/api/variantes-calzado/${id}/`, { headers: this.getHeaders() });
   }
 
   // CATEGORIAS

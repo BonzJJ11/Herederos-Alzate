@@ -10,7 +10,7 @@
 
     <!-- CARD BLANCA -->
     <div class="login-card">
-      <form [formGroup]="loginForm" (ngSubmit)="submit()">
+      <form [formGroup]="loginForm" (ngSubmit)="submit()" autocomplete="off">
 
         <!-- USERNAME -->
         <div class="form-group">
@@ -24,6 +24,7 @@
               id="username"
               formControlName="username"
               placeholder="Usuario"
+              autocomplete="one-time-code"
             />
           </div>
         </div>
@@ -36,10 +37,12 @@
             <lucide-icon class="input-icon" [img]="Lock"></lucide-icon>
 
             <input 
-              [type]="passwordInputType()"
+              type="text"
               id="password"
               formControlName="password"
               placeholder="********"
+              autocomplete="one-time-code"
+              [class.password-masked]="!showPassword"
             />
 
             <button type="button" class="eye-btn" (click)="togglePasswordVisibility()">

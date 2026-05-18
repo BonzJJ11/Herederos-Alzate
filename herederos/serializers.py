@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Usuario, Rol, Calzado, Categoria, Proveedor, Movimiento, TipoMovimiento, FirmaFactura, FirmaUsuario
+from .models import Usuario, Rol, ModeloCalzado, VarianteCalzado, Categoria, Proveedor, Movimiento, TipoMovimiento, FirmaFactura, FirmaUsuario
 import hashlib
 
 # ============================================================
@@ -74,27 +74,42 @@ class UsuarioLoginSerializer(serializers.ModelSerializer):
 
 
 # ============================================================
-# CALZADO
+# VARIANTE CALZADO
 # ============================================================
-class CalzadoSerializer(serializers.ModelSerializer):
-    nombre_categoria = serializers.CharField(source='id_categoria.nombre_categoria', read_only=True)
+class VarianteCalzadoSerializer(serializers.ModelSerializer):
     nombre_proveedor = serializers.CharField(source='id_proveedor.nombre_proveedor', read_only=True)
 
     class Meta:
-        model  = Calzado
+        model  = VarianteCalzado
         fields = [
-            'id_calzado',
-            'codigo',
-            'fecha_calzado',
-            'modelo',
+            'id_variante',
+            'id_modelo',
+            'id_proveedor',
+            'nombre_proveedor',
             'talla',
             'color',
             'stock_actual',
             'activo',
+        ]
+
+# ============================================================
+# MODELO CALZADO
+# ============================================================
+class ModeloCalzadoSerializer(serializers.ModelSerializer):
+    nombre_categoria = serializers.CharField(source='id_categoria.nombre_categoria', read_only=True)
+    variantes = VarianteCalzadoSerializer(many=True, read_only=True)
+
+    class Meta:
+        model  = ModeloCalzado
+        fields = [
+            'id_modelo',
+            'codigo',
+            'fecha_registro',
+            'nombre_modelo',
+            'activo',
             'id_categoria',
             'nombre_categoria',
-            'id_proveedor',
-            'nombre_proveedor',
+            'variantes',
         ]
 
 
@@ -138,8 +153,9 @@ class ProveedorSerializer(serializers.ModelSerializer):
 # MOVIMIENTO
 # ============================================================
 class MovimientoSerializer(serializers.ModelSerializer):
-    modelo         = serializers.CharField(source='id_calzado.modelo',                      read_only=True)
-    talla          = serializers.CharField(source='id_calzado.talla',                       read_only=True)
+    modelo         = serializers.CharField(source='id_variante.id_modelo.nombre_modelo', read_only=True)
+    talla          = serializers.CharField(source='id_variante.talla', read_only=True)
+    color          = serializers.CharField(source='id_variante.color', read_only=True)
     tipo           = serializers.CharField(source='id_tipomovimiento.nombre_tipomovimiento', read_only=True)
     nombre_usuario = serializers.SerializerMethodField()
     tiene_firma    = serializers.SerializerMethodField()
@@ -151,9 +167,10 @@ class MovimientoSerializer(serializers.ModelSerializer):
             'cantidad',
             'fecha_movimiento',
             'descripcion',
-            'id_calzado',
+            'id_variante',
             'modelo',
             'talla',
+            'color',
             'id_tipomovimiento',
             'tipo',
             'id_usuario',

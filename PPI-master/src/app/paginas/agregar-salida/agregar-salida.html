@@ -17,10 +17,10 @@
     <div class="form-grid">
       <label class="field">
         <span>Calzado</span>
-        <select [(ngModel)]="form.id_calzado">
+        <select [(ngModel)]="form.id_variante">
           <option [ngValue]="null" disabled>Selecciona un calzado</option>
-          <option *ngFor="let c of calzados" [ngValue]="c.id_calzado">
-            {{ c.modelo }} - Talla {{ c.talla }} (Stock: {{ c.stock_actual }})
+          <option *ngFor="let c of calzados" [ngValue]="c.id_variante">
+            {{ c.nombre }}
           </option>
         </select>
       </label>

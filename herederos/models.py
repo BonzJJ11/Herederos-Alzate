@@ -40,7 +40,7 @@ class Usuario(models.Model):
         managed  = False
         db_table = 'usuario'
 
-    def _str_(self):
+    def __str__(self):
         return f'{self.nombre} {self.apellidos}'
 
 
@@ -77,7 +77,7 @@ class Categoria(models.Model):
         managed  = False
         db_table = 'categoria'
 
-    def _str_(self):
+    def __str__(self):
         return self.nombre_categoria
 
 
@@ -100,31 +100,48 @@ class Proveedor(models.Model):
         managed  = False
         db_table = 'proveedor'
 
-    def _str_(self):
+    def __str__(self):
         return self.nombre_proveedor
 
 
 # ============================================================
-# PRODUCTO
+# MODELO CALZADO (Maestro)
 # ============================================================
-class Calzado(models.Model):
-    id_calzado     = models.AutoField(primary_key=True)
+class ModeloCalzado(models.Model):
+    id_modelo      = models.AutoField(primary_key=True)
     codigo         = models.CharField(max_length=20, unique=True)
-    fecha_calzado  = models.DateField()
-    modelo         = models.CharField(max_length=150)
+    nombre_modelo  = models.CharField(max_length=150)
+    fecha_registro = models.DateField()
+    activo         = models.BooleanField(default=True)
+    id_categoria   = models.ForeignKey(Categoria, on_delete=models.RESTRICT, db_column='id_categoria')
+
+    class Meta:
+        managed  = False
+        db_table = 'modelo_calzado'
+
+    def __str__(self):
+        return f'{self.codigo} - {self.nombre_modelo}'
+
+
+# ============================================================
+# VARIANTE CALZADO (Detalle)
+# ============================================================
+class VarianteCalzado(models.Model):
+    id_variante    = models.AutoField(primary_key=True)
+    id_modelo      = models.ForeignKey(ModeloCalzado, on_delete=models.RESTRICT, db_column='id_modelo', related_name='variantes')
+    id_proveedor   = models.ForeignKey(Proveedor, on_delete=models.RESTRICT, db_column='id_proveedor')
     talla          = models.CharField(max_length=10)
     color          = models.CharField(max_length=50)
     stock_actual   = models.IntegerField(default=0)
     activo         = models.BooleanField(default=True)
-    id_categoria   = models.ForeignKey(Categoria, on_delete=models.RESTRICT, db_column='id_categoria')
-    id_proveedor   = models.ForeignKey(Proveedor, on_delete=models.RESTRICT, db_column='id_proveedor')
 
     class Meta:
         managed  = False
-        db_table = 'calzado'
+        db_table = 'variante_calzado'
+        constraints = [models.UniqueConstraint(fields=['id_modelo', 'talla', 'color', 'id_proveedor'], condition=models.Q(activo=True), name='uq_variante_activa')]
 
-    def _str_(self):
-        return f'{self.codigo} - {self.modelo} | Talla: {self.talla} | Color: {self.color}'
+    def __str__(self):
+        return f'{self.id_modelo.nombre_modelo} | Talla: {self.talla} | Color: {self.color}'
 
 
 # ============================================================
@@ -151,7 +168,7 @@ class Movimiento(models.Model):
     cantidad          = models.IntegerField()
     fecha_movimiento  = models.DateField()
     descripcion       = models.CharField(max_length=255, blank=True, null=True)
-    id_calzado        = models.ForeignKey(Calzado, on_delete=models.RESTRICT, db_column='id_calzado')
+    id_variante       = models.ForeignKey(VarianteCalzado, on_delete=models.RESTRICT, db_column='id_variante')
     id_tipomovimiento = models.ForeignKey(TipoMovimiento, on_delete=models.RESTRICT, db_column='id_tipomovimiento')
     id_usuario        = models.ForeignKey(Usuario, on_delete=models.RESTRICT, db_column='id_usuario')
 
@@ -159,8 +176,8 @@ class Movimiento(models.Model):
         managed  = False
         db_table = 'movimiento'
 
-    def _str_(self):
-        return f'{self.id_tipomovimiento} - {self.id_producto} | Cantidad: {self.cantidad}'
+    def __str__(self):
+        return f'{self.id_tipomovimiento} - Variante {self.id_variante.id_variante} | Cantidad: {self.cantidad}'
 
 
 # ============================================================

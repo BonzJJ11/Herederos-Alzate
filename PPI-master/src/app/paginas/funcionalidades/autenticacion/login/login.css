@@ -204,3 +204,8 @@
     font-size: 24px;
   }
 }
+
+/* Truco para enmascarar contraseñas sin que Chrome las detecte */
+.password-masked {
+  -webkit-text-security: disc;
+}

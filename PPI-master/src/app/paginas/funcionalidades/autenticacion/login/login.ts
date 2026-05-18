@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,7 +13,7 @@ import { AuthService } from '../../../../nucleo/servicios/auth.service';
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class Login {
+export class Login implements OnInit {
   readonly User = User;
   readonly Lock = Lock;
   readonly Eye = Eye;
@@ -44,6 +44,30 @@ export class Login {
         this.forgotFeedback = 'Tu contraseña fue actualizada correctamente. Inicia sesión.';
       }
     });
+  }
+
+  ngOnInit() {
+    // Si el usuario llega a la pantalla de login, destruimos cualquier sesión activa
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.clear();
+    }
+
+    if (typeof localStorage !== 'undefined') {
+      const rememberedUsername = localStorage.getItem('rememberedUsername');
+      
+      // Limpiamos todo el localStorage para borrar tokens viejos que hayan quedado de versiones anteriores
+      localStorage.clear();
+      
+      if (rememberedUsername) {
+        // Restauramos solo el nombre de usuario
+        localStorage.setItem('rememberedUsername', rememberedUsername);
+        
+        this.loginForm.patchValue({
+          username: rememberedUsername,
+          remember: true
+        });
+      }
+    }
   }
 
   togglePasswordVisibility() {
@@ -96,8 +120,9 @@ export class Login {
 
     const username: string = this.loginForm.value.username ?? '';
     const password: string = this.loginForm.value.password ?? '';
+    const remember: boolean = this.loginForm.value.remember ?? false;
 
-    this.auth.login(username, password).subscribe({
+    this.auth.login(username, password, remember).subscribe({
       next: (response: any) => {
         this.loginError = '';
         const role = this.auth.getRole();

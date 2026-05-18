@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Briefcase, X } from 'lucide-angular';
 import { CalzadoService } from '../../nucleo/servicios/calzado.service';
 import { AuthService } from '../../nucleo/servicios/auth.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-agregar-entrada',
@@ -21,7 +22,7 @@ export class AgregarEntrada implements OnInit {
   calzados: any[] = [];
 
   form = {
-    id_calzado:       null as number | null,
+    id_variante:      null as number | null,
     cantidad:         null as number | null,
     fecha_movimiento: '',
     descripcion:      '',
@@ -33,20 +34,50 @@ export class AgregarEntrada implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.calzadoService.getCalzados().subscribe({
-      next: (data) => this.calzados = data,
+    this.calzadoService.getModelosCalzado().subscribe({
+      next: (data: any[]) => {
+        this.calzados = [];
+        data.forEach(m => {
+          if (m.variantes && m.variantes.length > 0) {
+            m.variantes.forEach((v: any) => {
+              if (v.activo) {
+                this.calzados.push({
+                  id_variante: v.id_variante,
+                  stock_actual: v.stock_actual,
+                  nombre: `${m.codigo} - ${m.nombre_modelo} | Talla: ${v.talla} | Color: ${v.color} | (Stock Actual: ${v.stock_actual})`
+                });
+              }
+            });
+          }
+        });
+      },
       error: (err) => console.error('Error cargando calzados:', err)
     });
   }
 
   guardar() {
-    if (!this.form.id_calzado || !this.form.cantidad || !this.form.fecha_movimiento) {
-      alert('Por favor completa todos los campos obligatorios.');
+    if (!this.form.id_variante || !this.form.cantidad || !this.form.fecha_movimiento || !this.form.descripcion || this.form.descripcion.trim() === '') {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor completa todos los campos obligatorios, incluyendo la descripción/observaciones.',
+        confirmButtonColor: '#0071bc'
+      });
+      return;
+    }
+
+    if (this.form.cantidad <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Cantidad inválida',
+        text: 'La cantidad debe ser mayor a 0.',
+        confirmButtonColor: '#0071bc'
+      });
       return;
     }
 
     const payload = {
-      id_calzado:       this.form.id_calzado,
+      id_variante:      this.form.id_variante,
       cantidad:         this.form.cantidad,
       fecha_movimiento: this.form.fecha_movimiento,
       descripcion:      this.form.descripcion,
@@ -55,13 +86,19 @@ export class AgregarEntrada implements OnInit {
 
     this.calzadoService.registrarEntrada(payload).subscribe({
       next: () => {
-        alert('Entrada registrada exitosamente.');
+        Swal.fire({
+          icon: 'success',
+          title: '¡Entrada registrada!',
+          text: 'El movimiento de entrada se guardó correctamente.',
+          timer: 2000,
+          showConfirmButton: false
+        });
         this.close.emit();
       },
       error: (err) => {
         console.error('Error registrando entrada:', err);
         const msg = err.error?.error || 'No se pudo registrar la entrada. Verifica los datos.';
-        alert('Error: ' + msg);
+        Swal.fire('Error', msg, 'error');
       }
     });
   }

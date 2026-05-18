@@ -13,6 +13,8 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
 
   constructor() {
+    // El sessionStorage nativamente ya protege contra apertura de nuevas pestañas,
+    // pero permitiremos que sobreviva a las recargas (F5) para mejor experiencia de usuario.
     this.syncRoleThemeFromStorage();
   }
 
@@ -27,7 +29,12 @@ export class AuthService {
     return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
   }
 
-  login(username: string, password: string): Observable<any> {
+  private getItem(key: string): string | null {
+    if (!isPlatformBrowser(this.platformId)) return null;
+    return sessionStorage.getItem(key);
+  }
+
+  login(username: string, password: string, rememberMe: boolean = false): Observable<any> {
     return this.http.post(`${this.apiUrl}/api/auth/login/`, {
       usuario: username,
       password: password
@@ -35,14 +42,22 @@ export class AuthService {
       tap((response: any) => {
         if (isPlatformBrowser(this.platformId)) {
           const role: string = this.mapRol(response.usuario.nombre_rol) ?? 'usuario';
-          localStorage.setItem('accessToken',     response.tokens.access);
-          localStorage.setItem('refreshToken',    response.tokens.refresh);
-          localStorage.setItem('isAuthenticated', 'true');
-          localStorage.setItem('userRole',        role);
-          localStorage.setItem('userName',        response.usuario.nombre);
-          localStorage.setItem('userUsername',    response.usuario.usuario);
-          localStorage.setItem('userId',          String(response.usuario.id_usuario));
-          localStorage.setItem('userFull',        JSON.stringify(response.usuario));
+          
+          sessionStorage.setItem('accessToken',     response.tokens.access);
+          sessionStorage.setItem('refreshToken',    response.tokens.refresh);
+          sessionStorage.setItem('isAuthenticated', 'true');
+          sessionStorage.setItem('userRole',        role);
+          sessionStorage.setItem('userName',        response.usuario.nombre);
+          sessionStorage.setItem('userUsername',    response.usuario.usuario);
+          sessionStorage.setItem('userId',          String(response.usuario.id_usuario));
+          sessionStorage.setItem('userFull',        JSON.stringify(response.usuario));
+          
+          if (rememberMe) {
+            localStorage.setItem('rememberedUsername', username);
+          } else {
+            localStorage.removeItem('rememberedUsername');
+          }
+          
           this.applyRoleTheme(role as UserRole);
         }
       })
@@ -50,13 +65,21 @@ export class AuthService {
   }
 
   logout(): Observable<any> {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = this.getItem('refreshToken');
     return this.http.post(`${this.apiUrl}/api/auth/logout/`, {
       refresh: refreshToken
     }).pipe(
       tap(() => {
         if (isPlatformBrowser(this.platformId)) {
+          const rememberedUsername = localStorage.getItem('rememberedUsername');
+          
+          sessionStorage.clear();
           localStorage.clear();
+          
+          if (rememberedUsername) {
+            localStorage.setItem('rememberedUsername', rememberedUsername);
+          }
+          
           this.applyRoleTheme(null);
         }
       })
@@ -102,35 +125,29 @@ export class AuthService {
   }
 
   getAccessToken(): string | null {
-    if (!isPlatformBrowser(this.platformId)) return null;
-    return localStorage.getItem('accessToken');
+    return this.getItem('accessToken');
   }
 
   isAuthenticated(): boolean {
-    if (!isPlatformBrowser(this.platformId)) return false;
-    return localStorage.getItem('isAuthenticated') === 'true';
+    return !!this.getItem('accessToken');
   }
 
   getRole(): UserRole {
-    if (!isPlatformBrowser(this.platformId)) return null;
-    return localStorage.getItem('userRole') as UserRole;
+    return this.getItem('userRole') as UserRole;
   }
 
   getUserName(): string {
-    if (!isPlatformBrowser(this.platformId)) return '';
-    return localStorage.getItem('userName') || '';
+    return this.getItem('userName') || '';
   }
 
   getUsuario(): { id_usuario: number } | null {
-    if (!isPlatformBrowser(this.platformId)) return null;
-    const id = localStorage.getItem('userId');
+    const id = this.getItem('userId');
     if (!id) return null;
     return { id_usuario: Number(id) };
   }
 
   getUserFull(): any | null {
-    if (!isPlatformBrowser(this.platformId)) return null;
-    const userStr = localStorage.getItem('userFull');
+    const userStr = this.getItem('userFull');
     if (!userStr) return null;
     try {
       return JSON.parse(userStr);
@@ -150,7 +167,7 @@ export class AuthService {
 
   syncRoleThemeFromStorage() {
     if (!isPlatformBrowser(this.platformId)) return;
-    const role = localStorage.getItem('userRole') as UserRole;
+    const role = sessionStorage.getItem('userRole') as UserRole;
     this.applyRoleTheme(role);
   }
 
@@ -163,8 +180,8 @@ export class AuthService {
 
   actualizarCacheUsuario(data: any) {
     if (!isPlatformBrowser(this.platformId)) return;
-    if (data.nombre)    localStorage.setItem('userName',     data.nombre);
-    if (data.usuario)   localStorage.setItem('userUsername', data.usuario);
-    localStorage.setItem('userFull', JSON.stringify(data));
+    if (data.nombre)    sessionStorage.setItem('userName',     data.nombre);
+    if (data.usuario)   sessionStorage.setItem('userUsername', data.usuario);
+    sessionStorage.setItem('userFull', JSON.stringify(data));
   }
 }

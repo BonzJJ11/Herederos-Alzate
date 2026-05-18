@@ -110,3 +110,8 @@ body.role-usuario .btn-minimal {
 body.role-usuario .footer {
   background: #303030 !important;
 }
+
+/* Fix SweetAlert showing behind high z-index modals */
+.swal2-container {
+  z-index: 100000 !important;
+}

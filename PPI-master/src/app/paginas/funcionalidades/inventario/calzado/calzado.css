@@ -484,3 +484,111 @@ tbody tr:hover {
   background: #1d4ed8;
   color: white;
 }
+
+/* Pagination Styles */
+.pagination-controls {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem 0;
+	margin-top: 1rem;
+	border-top: 1px solid #e2e8f0;
+}
+
+.btn-page {
+	padding: 0.5rem 1rem;
+	background: white;
+	border: 1px solid #cbd5e1;
+	border-radius: 6px;
+	color: #334155;
+	font-weight: 600;
+	font-size: 0.85rem;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.btn-page:hover:not(:disabled) {
+	background: #f1f5f9;
+	border-color: #94a3b8;
+}
+
+.btn-page:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: #f8fafc;
+}
+
+.page-info {
+	font-size: 13px;
+	font-weight: 600;
+	color: #6b7280;
+}
+
+/* Accordion Styles */
+.accordion-header {
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.accordion-header:hover {
+	background: #f1f5f9 !important;
+}
+
+.text-right {
+	text-align: right;
+}
+
+.expand-icon {
+	width: 1.2rem;
+	height: 1.2rem;
+	color: #64748b;
+	transition: transform 0.2s ease;
+}
+
+.variantes-badge {
+	background: #e0f2fe;
+	color: #0284c7;
+	padding: 0.3rem 0.6rem;
+	border-radius: 99px;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+/* Subtable */
+.accordion-body {
+	background: #f8fafc;
+}
+
+.subtable-cell {
+	padding: 0 !important;
+	border-bottom: 2px solid #e2e8f0;
+}
+
+.subtable {
+	width: 100%;
+	background: #f8fafc;
+	margin: 0;
+	border-radius: 0;
+}
+
+.subtable thead {
+	background: #f1f5f9;
+}
+
+.subtable th {
+	padding: 0.6rem 1.5rem;
+	font-size: 0.75rem;
+	color: #475569;
+	border-bottom: 1px solid #cbd5e1;
+}
+
+.subtable td {
+	padding: 0.8rem 1.5rem;
+	font-size: 0.8rem;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+.subtable tr:last-child td {
+	border-bottom: none;
+}

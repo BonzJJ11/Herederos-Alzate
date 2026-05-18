@@ -9,10 +9,10 @@ from django.conf import settings
 from django.utils import timezone
 import random
 
-from .models import Usuario, Calzado, Categoria, Proveedor, Movimiento, TipoMovimiento, CodigoVerificacion, FirmaFactura, FirmaUsuario
+from .models import Usuario, ModeloCalzado, VarianteCalzado, Categoria, Proveedor, Movimiento, TipoMovimiento, CodigoVerificacion, FirmaFactura, FirmaUsuario
 from .serializers import (
     RegistroUsuarioSerializer, UsuarioLoginSerializer,
-    CalzadoSerializer, CategoriaSerializer, ProveedorSerializer, MovimientoSerializer,
+    ModeloCalzadoSerializer, VarianteCalzadoSerializer, CategoriaSerializer, ProveedorSerializer, MovimientoSerializer,
     FirmaFacturaSerializer, FirmaUsuarioSerializer
 )
 import hashlib
@@ -130,49 +130,130 @@ class EditarUsuarioView(APIView):
         return Response({'mensaje': 'Empleado desactivado correctamente.'}, status=status.HTTP_200_OK)
 
 # ============================================================
-# CALZADO
+# MODELO CALZADO
 # ============================================================
-class CalzadoListView(APIView):
+class ModeloCalzadoListView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        calzados = Calzado.objects.filter(activo=True).select_related('id_categoria', 'id_proveedor')
-        serializer = CalzadoSerializer(calzados, many=True)
+        modelos = ModeloCalzado.objects.filter(activo=True).select_related('id_categoria')
+        serializer = ModeloCalzadoSerializer(modelos, many=True)
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = CalzadoSerializer(data=request.data)
+        data = request.data.copy()
+        data['activo'] = True
+
+        modelo_inactivo = ModeloCalzado.objects.filter(activo=False, codigo__iexact=data.get('codigo')).first()
+
+        if modelo_inactivo:
+            serializer = ModeloCalzadoSerializer(modelo_inactivo, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ModeloCalzadoSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CalzadoDetailView(APIView):
+class ModeloCalzadoDetailView(APIView):
     permission_classes = [AllowAny]
 
     def get_object(self, pk):
         try:
-            return Calzado.objects.get(pk=pk, activo=True)
-        except Calzado.DoesNotExist:
+            return ModeloCalzado.objects.get(pk=pk, activo=True)
+        except ModeloCalzado.DoesNotExist:
             return None
 
     def put(self, request, pk):
-        calzado = self.get_object(pk)
-        if not calzado:
-            return Response({'error': 'Calzado no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = CalzadoSerializer(calzado, data=request.data, partial=True)
+        modelo = self.get_object(pk)
+        if not modelo:
+            return Response({'error': 'Modelo no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ModeloCalzadoSerializer(modelo, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        calzado = self.get_object(pk)
-        if not calzado:
-            return Response({'error': 'Calzado no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
-        calzado.activo = False
-        calzado.save(update_fields=['activo'])
-        return Response({'mensaje': 'Calzado eliminado correctamente.'})
+        modelo = self.get_object(pk)
+        if not modelo:
+            return Response({'error': 'Modelo no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Eliminación lógica del modelo
+        modelo.activo = False
+        modelo.save(update_fields=['activo'])
+        
+        # Eliminación lógica en cascada de todas sus variantes
+        VarianteCalzado.objects.filter(id_modelo=modelo).update(activo=False)
+        
+        return Response({'mensaje': 'Modelo y sus variantes eliminados correctamente.'})
+
+# ============================================================
+# VARIANTE CALZADO
+# ============================================================
+class VarianteCalzadoListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        variantes = VarianteCalzado.objects.filter(activo=True)
+        serializer = VarianteCalzadoSerializer(variantes, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        data = request.data.copy()
+        data['activo'] = True
+
+        variante_inactiva = VarianteCalzado.objects.filter(
+            activo=False,
+            id_modelo=data.get('id_modelo'),
+            talla=data.get('talla'),
+            color__iexact=data.get('color'),
+            id_proveedor=data.get('id_proveedor')
+        ).first()
+
+        if variante_inactiva:
+            serializer = VarianteCalzadoSerializer(variante_inactiva, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = VarianteCalzadoSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class VarianteCalzadoDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get_object(self, pk):
+        try:
+            return VarianteCalzado.objects.get(pk=pk, activo=True)
+        except VarianteCalzado.DoesNotExist:
+            return None
+
+    def put(self, request, pk):
+        variante = self.get_object(pk)
+        if not variante:
+            return Response({'error': 'Variante no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = VarianteCalzadoSerializer(variante, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        variante = self.get_object(pk)
+        if not variante:
+            return Response({'error': 'Variante no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+        variante.activo = False
+        variante.save(update_fields=['activo'])
+        return Response({'mensaje': 'Variante eliminada correctamente.'})
 
 # ============================================================
 # CATEGORIAS
@@ -186,7 +267,22 @@ class CategoriaListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = CategoriaSerializer(data=request.data)
+        data = request.data.copy()
+        data['activo'] = True
+
+        categoria_inactiva = Categoria.objects.filter(activo=False).filter(
+            db_models.Q(codigo=data.get('codigo')) |
+            db_models.Q(nombre_categoria=data.get('nombre_categoria'))
+        ).first()
+
+        if categoria_inactiva:
+            serializer = CategoriaSerializer(categoria_inactiva, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = CategoriaSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -231,7 +327,22 @@ class ProveedorListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = ProveedorSerializer(data=request.data)
+        data = request.data.copy()
+        data['activo'] = True
+
+        proveedor_inactivo = Proveedor.objects.filter(activo=False).filter(
+            db_models.Q(codigo=data.get('codigo')) |
+            db_models.Q(mail=data.get('mail'))
+        ).first()
+
+        if proveedor_inactivo:
+            serializer = ProveedorSerializer(proveedor_inactivo, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ProveedorSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -272,7 +383,7 @@ class MovimientoListView(APIView):
 
     def get(self, request):
         movimientos = Movimiento.objects.all().select_related(
-            'id_calzado', 'id_tipomovimiento', 'id_usuario'
+            'id_variante', 'id_tipomovimiento', 'id_usuario'
         ).order_by('-fecha_movimiento')
         serializer = MovimientoSerializer(movimientos, many=True)
         return Response(serializer.data)
@@ -282,7 +393,7 @@ class MovimientoEntradaView(APIView):
 
     def post(self, request):
         try:
-            calzado     = Calzado.objects.get(pk=request.data.get('id_calzado'))
+            variante    = VarianteCalzado.objects.get(pk=request.data.get('id_variante'))
             cantidad    = int(request.data.get('cantidad', 0))
             tipo        = TipoMovimiento.objects.get(nombre_tipomovimiento__iexact='Entrada')
             usuario     = Usuario.objects.get(pk=request.data.get('id_usuario'))
@@ -294,14 +405,14 @@ class MovimientoEntradaView(APIView):
 
             movimiento = Movimiento.objects.create(
                 cantidad=cantidad, fecha_movimiento=fecha, descripcion=descripcion,
-                id_calzado=calzado, id_tipomovimiento=tipo, id_usuario=usuario,
+                id_variante=variante, id_tipomovimiento=tipo, id_usuario=usuario,
             )
-            calzado.stock_actual += cantidad
-            calzado.save(update_fields=['stock_actual'])
+            variante.stock_actual += cantidad
+            variante.save(update_fields=['stock_actual'])
             return Response(MovimientoSerializer(movimiento).data, status=status.HTTP_201_CREATED)
 
-        except Calzado.DoesNotExist:
-            return Response({'error': 'El calzado seleccionado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+        except VarianteCalzado.DoesNotExist:
+            return Response({'error': 'La variante seleccionada no existe.'}, status=status.HTTP_404_NOT_FOUND)
         except TipoMovimiento.DoesNotExist:
             return Response({'error': 'Configuración de sistema incompleta: No se encontró el tipo de movimiento ENTRADA.'}, status=status.HTTP_404_NOT_FOUND)
         except Usuario.DoesNotExist:
@@ -408,6 +519,10 @@ class ResetPasswordView(APIView):
 
             # Actualizar contraseña
             password_hash = hashlib.sha256(password.encode()).hexdigest()
+            
+            if usuario.password == password_hash:
+                return Response({'error': 'Por seguridad, la nueva contraseña no puede ser igual a la que ya tenías.'}, status=status.HTTP_400_BAD_REQUEST)
+
             usuario.password = password_hash
             usuario.save()
 
@@ -425,7 +540,7 @@ class MovimientoSalidaView(APIView):
 
     def post(self, request):
         try:
-            calzado     = Calzado.objects.get(pk=request.data.get('id_calzado'))
+            variante    = VarianteCalzado.objects.get(pk=request.data.get('id_variante'))
             cantidad    = int(request.data.get('cantidad', 0))
             tipo        = TipoMovimiento.objects.get(nombre_tipomovimiento__iexact='Salida')
             usuario     = Usuario.objects.get(pk=request.data.get('id_usuario'))
@@ -434,19 +549,19 @@ class MovimientoSalidaView(APIView):
 
             if cantidad <= 0:
                 return Response({'error': 'La cantidad debe ser mayor a 0.'}, status=status.HTTP_400_BAD_REQUEST)
-            if calzado.stock_actual < cantidad:
-                return Response({'error': f'Stock insuficiente. Stock actual: {calzado.stock_actual}'}, status=status.HTTP_400_BAD_REQUEST)
+            if variante.stock_actual < cantidad:
+                return Response({'error': f'Stock insuficiente. Stock actual: {variante.stock_actual}'}, status=status.HTTP_400_BAD_REQUEST)
 
             movimiento = Movimiento.objects.create(
                 cantidad=cantidad, fecha_movimiento=fecha, descripcion=descripcion,
-                id_calzado=calzado, id_tipomovimiento=tipo, id_usuario=usuario,
+                id_variante=variante, id_tipomovimiento=tipo, id_usuario=usuario,
             )
-            calzado.stock_actual -= cantidad
-            calzado.save(update_fields=['stock_actual'])
+            variante.stock_actual -= cantidad
+            variante.save(update_fields=['stock_actual'])
             return Response(MovimientoSerializer(movimiento).data, status=status.HTTP_201_CREATED)
 
-        except Calzado.DoesNotExist:
-            return Response({'error': 'El calzado seleccionado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+        except VarianteCalzado.DoesNotExist:
+            return Response({'error': 'La variante seleccionada no existe.'}, status=status.HTTP_404_NOT_FOUND)
         except TipoMovimiento.DoesNotExist:
             return Response({'error': 'Configuración de sistema incompleta: No se encontró el tipo de movimiento SALIDA.'}, status=status.HTTP_404_NOT_FOUND)
         except Usuario.DoesNotExist:
