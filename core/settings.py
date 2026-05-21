@@ -110,7 +110,7 @@ DATABASES = {
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '5432'),
         'OPTIONS': {
-            'sslmode': os.getenv('DB_SSLMODE', 'disable'),
+            'sslmode': 'require' if os.getenv('RENDER') else 'disable',
         },
     }
 }
