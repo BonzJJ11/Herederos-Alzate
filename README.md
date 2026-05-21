@@ -1,26 +1,27 @@
-#  Herederos Alzate - Sistema de Gestión
+# Herederos Alzate - Sistema de Gestión
 
 Sistema web fullstack para la gestión de **inventario de calzado** y **empleados** de la empresa Herederos Alzate. Desarrollado con **Django REST Framework** en el backend y **Angular** en el frontend.
 
 ---
 
-##  Descripción del proyecto
+## Descripción del proyecto
 
 Este sistema permite:
 
--  **Autenticación**: login, recuperación de contraseña por código y cambio de contraseña
--  **Inventario de calzado**: registrar, editar y consultar calzado con sus categorías
--  **Movimiento de stock**: registrar entradas y salidas de productos
--  **Empleados**: registrar y editar información del personal
--  **Proveedores**: agregar, consultar y editar proveedores
--  **Dashboard (Home)**: vista general del sistema
--  **Perfil de usuario**: gestión del perfil
+- **Autenticación**: login, recuperación de contraseña por código y cambio de contraseña
+- **Inventario de calzado**: registrar, editar y consultar calzado con sus categorías
+- **Movimiento de stock**: registrar entradas y salidas de productos
+- **Empleados**: registrar y editar información del personal
+- **Proveedores**: agregar, consultar y editar proveedores
+- **Dashboard (Home)**: vista general del sistema
+- **Perfil de usuario**: gestión del perfil
 
 ---
 
-##  Tecnologías utilizadas
+## Tecnologías utilizadas
 
 ### Backend
+
 - **Python 3.13**
 - **Django**
 - **Django REST Framework**
@@ -29,13 +30,14 @@ Este sistema permite:
 - **django-cors-headers**
 
 ### Frontend
+
 - **Angular 17+**
 - **TypeScript**
 - **HTML5 / CSS3**
 
 ---
 
-##  Estructura del proyecto
+## Estructura del proyecto
 
 ```
 Herederos Alzate/
@@ -113,7 +115,7 @@ Herederos Alzate/
 
 ---
 
-##  Requisitos previos
+## Requisitos previos
 
 Antes de comenzar, asegúrate de tener instalado:
 
@@ -125,7 +127,7 @@ Antes de comenzar, asegúrate de tener instalado:
 
 ---
 
-##  Instalación
+## Instalación
 
 ### 1. Clonar el repositorio
 
@@ -163,7 +165,8 @@ O si existe `requirements.txt`:
 pip install -r requirements.txt
 ```
 
->  Para generar el `requirements.txt` con tus paquetes actuales:
+> Para generar el `requirements.txt` con tus paquetes actuales:
+>
 > ```bash
 > pip freeze > requirements.txt
 > ```
@@ -204,7 +207,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
- Backend disponible en: `http://localhost:8000`
+Backend disponible en: `http://localhost:8000`
 
 ---
 
@@ -221,45 +224,44 @@ npm install
 ng serve
 ```
 
- Frontend disponible en: `http://localhost:4200`
+Frontend disponible en: `http://localhost:4200`
 
 ---
 
-##  Paquetes pip principales
+## Paquetes pip principales
 
-| Paquete | Descripción |
-|---|---|
-| `django` | Framework web backend |
-| `djangorestframework` | Construcción de la API REST |
-| `djangorestframework-simplejwt` | Autenticación con tokens JWT |
-| `django-cors-headers` | Permite la comunicación con el frontend Angular |
-| `psycopg2-binary` | Driver de conexión con PostgreSQL |
+| Paquete                         | Descripción                                     |
+| ------------------------------- | ----------------------------------------------- |
+| `django`                        | Framework web backend                           |
+| `djangorestframework`           | Construcción de la API REST                     |
+| `djangorestframework-simplejwt` | Autenticación con tokens JWT                    |
+| `django-cors-headers`           | Permite la comunicación con el frontend Angular |
+| `psycopg2-binary`               | Driver de conexión con PostgreSQL               |
 
 ---
 
-##  Rutas del Frontend (Angular)
+## Rutas del Frontend (Angular)
 
-| Ruta | Descripción |
-|---|---|
-| `/splash` | Pantalla de bienvenida |
-| `/login` | Inicio de sesión |
+| Ruta                   | Descripción                |
+| ---------------------- | -------------------------- |
+| `/splash`              | Pantalla de bienvenida     |
+| `/login`               | Inicio de sesión           |
 | `/codigo-recuperacion` | Recuperación de contraseña |
-| `/nueva-contrasena` | Cambiar contraseña |
-| `/home` | Dashboard principal |
-| `/perfil` | Perfil del usuario |
-| `/calzado` | Lista de calzado |
-| `/nuevo-calzado` | Registrar calzado |
-| `/editar-calzado` | Editar calzado |
-| `/categorias` | Lista de categorías |
-| `/nueva-categoria` | Crear categoría |
-| `/agregar-entrada` | Registrar entrada de stock |
-| `/agregar-salida` | Registrar salida de stock |
-| `/movimiento-stock` | Historial de movimientos |
-| `/proveedores` | Lista de proveedores |
-| `/agregar-proveedor` | Registrar proveedor |
-| `/editar-proveedores` | Editar proveedor |
-| `/registrar-empleado` | Registrar empleado |
-| `/editar-empleado` | Editar empleado |
+| `/nueva-contrasena`    | Cambiar contraseña         |
+| `/home`                | Dashboard principal        |
+| `/perfil`              | Perfil del usuario         |
+| `/calzado`             | Lista de calzado           |
+| `/nuevo-calzado`       | Registrar calzado          |
+| `/editar-calzado`      | Editar calzado             |
+| `/categorias`          | Lista de categorías        |
+| `/nueva-categoria`     | Crear categoría            |
+| `/agregar-entrada`     | Registrar entrada de stock |
+| `/agregar-salida`      | Registrar salida de stock  |
+| `/movimiento-stock`    | Historial de movimientos   |
+| `/proveedores`         | Lista de proveedores       |
+| `/agregar-proveedor`   | Registrar proveedor        |
+| `/editar-proveedores`  | Editar proveedor           |
+| `/registrar-empleado`  | Registrar empleado         |
+| `/editar-empleado`     | Editar empleado            |
 
 ---
-
