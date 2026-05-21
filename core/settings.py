@@ -40,7 +40,7 @@ SECRET_KEY = 'django-insecure-bc=ln+ntu42!*f6&p%_c7+e^kj#p3l61$!h7e@%2=)wgvfqkcl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -149,9 +149,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # ============================================================
 # CONFIGURACIÓN DE CORREO - Gmail SMTP
